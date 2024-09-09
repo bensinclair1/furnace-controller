@@ -12,12 +12,14 @@ export interface TemperatureEntry {
 const App: React.FC = () => {
   const [temperatureData, setTemperatureData] = useState<TemperatureEntry[]>([]);
   const [currentTemperature, setCurrentTemperature] = useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [resetTrigger, setResetTrigger] = useState(0);
+  const [temperatureSetPoint, setTemperatureSetPoint] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTemperature = async () => {
       try {
         const response = await axios.get("http://localhost:8000/api/temperature");
-        console.log(response.data.temperature);
         const newTemperature = response.data.temperature;
         setCurrentTemperature(newTemperature);
       } catch (error) {
@@ -39,10 +41,29 @@ const App: React.FC = () => {
     setTemperatureData(prevData => [...prevData, entry]);
   };
 
+  const togglePlay = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+  const handleReset = () => {
+    setIsPlaying(false);
+    setResetTrigger(prev => prev + 1);
+  };
+
   return (
     <div className="App">
-      <h1>Current Temperature = {currentTemperature !== null ? `${currentTemperature}°C` : 'Loading...'}</h1>
-      <DataGraph temperatureData={temperatureData} />
+      <h2>Current Temperature = {currentTemperature !== null ? `${currentTemperature}°C` : 'Loading...'}</h2>
+      <h2>Temperature Set Point = {temperatureSetPoint !== null ? `${temperatureSetPoint.toFixed(2)}°C` : 'N/A'}</h2>
+      <h2>Current Status = {isPlaying ? 'Playing' : 'Paused'}</h2>
+      <DataGraph 
+        temperatureData={temperatureData} 
+        isPlaying={isPlaying}
+        resetTrigger={resetTrigger}
+        setTemperatureSetPoint={setTemperatureSetPoint}
+        // currentTemperature={currentTemperature}
+      />
+      <button onClick={togglePlay}>{isPlaying ? 'Pause' : 'Play'}</button>
+      <button onClick={handleReset}>Reset</button>
       <TemperatureTable
         entries={temperatureData}
         removeEntry={removeTemperatureEntry}
