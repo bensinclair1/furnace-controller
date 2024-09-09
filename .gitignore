@@ -23,6 +23,7 @@ yarn-error.log*
 # Vite
 dist/
 dist-ssr/
+.vite/
 
 # React
 build/
@@ -70,3 +71,5 @@ htmlcov/
 
 # pyenv
 .python-version
+
+personal_website.code-workspace
