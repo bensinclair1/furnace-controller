@@ -17,7 +17,6 @@ app.add_middleware(
 async def get_temperature():
     # Simulating a temperature reading between 0 and 100°C
     temperature = random.randint(0, 100)
-    print(f"Temperature: {temperature}")
     return {"temperature": temperature}
 
 if __name__ == "__main__":

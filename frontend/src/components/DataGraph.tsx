@@ -11,27 +11,45 @@ interface DataGraphProps {
   isPlaying: boolean;
   resetTrigger: number;
   setTemperatureSetPoint: (temperature: number | null) => void;
+  getCurrentTemperature: () => number | null;
 }
 
-const DataGraph: React.FC<DataGraphProps> = ({ temperatureData, isPlaying, resetTrigger, setTemperatureSetPoint }) => {
+const DataGraph: React.FC<DataGraphProps> = ({ temperatureData, isPlaying, resetTrigger, setTemperatureSetPoint, getCurrentTemperature }) => {
   const [currentTime, setCurrentTime] = useState(0);
+  const [realTimeData, setRealTimeData] = useState<TemperatureEntry[]>([]);
 
+  // Effect for handling play/pause and time progression
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     if (isPlaying) {
       intervalId = setInterval(() => {
-        setCurrentTime((prevTime) => {
-          const newTime = prevTime + 1/12;
-          updateTemperatureSetPoint(newTime);
-          return newTime;
-        });
+        setCurrentTime((prevTime) => prevTime + 1/12);
       }, 5000);
     }
     return () => clearInterval(intervalId);
-  }, [isPlaying, temperatureData]);
+  }, [isPlaying]);
 
+  // Effect for updating temperature set point and real-time data
+  useEffect(() => {
+    updateTemperatureSetPoint(currentTime);
+    if (isPlaying) {
+      const currentTemp = getCurrentTemperature();
+      if (currentTemp !== null) {
+        setRealTimeData(prevData => {
+          const lastPoint = prevData[prevData.length - 1];
+          if (!lastPoint || lastPoint.time !== currentTime) {
+            return [...prevData, { id: Date.now(), time: currentTime, temperature: currentTemp }];
+          }
+          return prevData;
+        });
+      }
+    }
+  }, [currentTime, temperatureData, isPlaying, getCurrentTemperature]);
+
+  // Effect for handling reset
   useEffect(() => {
     setCurrentTime(0);
+    setRealTimeData([]);
     updateTemperatureSetPoint(0);
   }, [resetTrigger]);
 
@@ -60,14 +78,23 @@ const DataGraph: React.FC<DataGraphProps> = ({ temperatureData, isPlaying, reset
     }
   };
 
+  // Filter realTimeData to only include data up to the current time
+  const visibleRealTimeData = realTimeData.filter(item => item.time <= currentTime);
+
   const chartData = {
-    labels: temperatureData.map((item) => item.time),
+    labels: [...temperatureData, ...visibleRealTimeData].map((item) => item.time),
     datasets: [
       {
-        label: 'Temperature (°C)',
-        data: temperatureData.map((item) => item.temperature),
+        label: 'Set Temperature (°C)',
+        data: temperatureData.map((item) => ({ x: item.time, y: item.temperature })),
         borderColor: 'rgba(75, 192, 192, 1)',
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
+      },
+      {
+        label: 'Real-time Temperature (°C)',
+        data: visibleRealTimeData.map((item) => ({ x: item.time, y: item.temperature })),
+        borderColor: 'rgba(255, 99, 132, 1)',
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
       },
     ],
   };

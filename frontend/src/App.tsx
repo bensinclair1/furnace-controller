@@ -15,6 +15,7 @@ const App: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
   const [temperatureSetPoint, setTemperatureSetPoint] = useState<number | null>(null);
+  const getCurrentTemperature = () => currentTemperature;
 
   useEffect(() => {
     const fetchTemperature = async () => {
@@ -60,7 +61,7 @@ const App: React.FC = () => {
         isPlaying={isPlaying}
         resetTrigger={resetTrigger}
         setTemperatureSetPoint={setTemperatureSetPoint}
-        // currentTemperature={currentTemperature}
+        getCurrentTemperature={getCurrentTemperature}
       />
       <button onClick={togglePlay}>{isPlaying ? 'Pause' : 'Play'}</button>
       <button onClick={handleReset}>Reset</button>
